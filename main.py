@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from data.loader import DataLoader
 from simulations.option import Option
-from simulations.monte_carlo import MonteCarloSimulator
+from simulations.monte_carlo import MonteCarlo, RQMC
 '''from simulations.quasi_monte_carlo import QuasiMonteCarloSimulator'''
 from analysis.tools import AnalysisTools
 
@@ -27,8 +27,8 @@ analysis_tools = AnalysisTools()
 
 # Définition des simulateurs
 option = Option(S0, K, T, r, sigma)
-mc_simulator = MonteCarloSimulator(option, M, dt)
-'''qmc_simulator = QuasiMonteCarloSimulator(S0, K, T, r, sigma, M, dt)'''
+mc_simulator = MonteCarlo(option, M, dt)
+rqmc_simulator = RQMC(option, M, dt)
 
 #Graphs settings
 plt.rc('text', usetex=True)
@@ -46,11 +46,17 @@ plt.rcParams.update({
 })
 
 
-methods = {
+MC_methods = {
         "MC Basic": mc_simulator.basic,
-        "Antithetic": mc_simulator.antithetic,
-        "Control Variate": mc_simulator.control_variate_geom,
+        "MC Antithetic": mc_simulator.antithetic,
+        "MC Control Variate": mc_simulator.control_variate_geom,
     }
 
-results_df = analysis_tools.compare_methods(methods, I_values)
+RQMC_methods = {
+        "RQMC Basic": rqmc_simulator.basic,
+        "Antithetic": rqmc_simulator.antithetic,
+        "Control Variate": rqmc_simulator.control_variate_geom,
+    }
+
+results_df = analysis_tools.compare_methods(RQMC_methods, I_values)
 print(results_df)

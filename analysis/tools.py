@@ -8,7 +8,7 @@ class AnalysisTools:
     def __init__(self):
         pass
 
-    def compare_I_values(self, pricing_method, option, M, dt, I_values):
+    def compare_I_values(self, pricing_method, M, dt, I_values):
         """
         Compare les estimations de prix et l'écart type pour différentes valeurs de I.
         :param pricing_method: Méthode de pricing à utiliser (fonction).
@@ -24,8 +24,8 @@ class AnalysisTools:
             result = pricing_method(I)
             results.append({
                 'I': I,
-                'Estimated Price': result['price'],
-                'Standard Deviation': result['std_dev']
+                'Estimated Price': round(result['price'], 4),
+                'Standard Deviation': round(result['std_dev'], 4)
             })
 
         results_df = pd.DataFrame(results)
@@ -227,4 +227,5 @@ class AnalysisTools:
         axes[1,1].legend(loc="best", fontsize=8, frameon=False)
 
         plt.tight_layout()
+        plt.savefig("graphique.pdf", format="pdf", bbox_inches="tight")
         plt.show()

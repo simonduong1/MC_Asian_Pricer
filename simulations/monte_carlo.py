@@ -1,10 +1,12 @@
 import numpy as np
+from abc import ABC, abstractmethod
+from scipy.stats import qmc, norm
 from .option import Option
 
-class MonteCarloSimulator:
+class Simulator(ABC):
     def __init__(self, option, M, dt):
         """
-        Classe pour simuler le prix des options via Monte Carlo.
+        Classe mère abstraite pour les simulateurs.
         :param option: Instance de la classe Option.
         :param M: Nombre de pas temporels.
         :param dt: Taille d'un pas temporel (T / M).
@@ -12,6 +14,20 @@ class MonteCarloSimulator:
         self.option = option
         self.M = M
         self.dt = dt
+
+    @abstractmethod
+    def _generate_paths(self, I):
+        """
+        Méthode abstraite pour générer les trajectoires (à implémenter par les classes filles).
+        """
+        pass
+
+    @abstractmethod
+    def _generate_paths_antithetic(self, I):
+        """
+        Méthode abstraite pour générer les trajectoires antithetic (à implémenter par les classes filles).
+        """
+        pass
 
     def basic(self, I):
         """
@@ -46,9 +62,9 @@ class MonteCarloSimulator:
         beta_opt = -np.cov(hT, Z_control, ddof=1)[0, 1] / np.var(Z_control, ddof=1)
         hT_controlled = hT + beta_opt * Z_control
         if return_control:
-            return hT, Z_control
+            return hT_controlled, Z_control
         else:
-            return self._compute_results(hT, I)
+            return self._compute_results(hT_controlled, I)
     
     def control_variate(self, I, return_control=False):
         """
@@ -67,41 +83,10 @@ class MonteCarloSimulator:
         hT_controlled = hT + beta_opt * Z_control
 
         if return_control:
-            return hT, Z_control  # Retourne les payoffs et les variates de contrôle
+            return hT_controlled, Z_control  # Retourne les payoffs et les variates de contrôle
         else:
             return self._compute_results(hT_controlled, I)  # Retourne les résultats standard
-
-    def _generate_paths(self, I):
-        """
-        Génère les trajectoires pour le sous-jacent.
-        :param I: Nombre de simulations.
-        :return: Matrice des trajectoires simulées.
-        """
-        S = np.zeros((self.M + 1, I))
-        S[0] = self.option.S0
-        for t in range(1, self.M + 1):
-            Z = np.random.standard_normal(I)
-            S[t] = S[t - 1] * np.exp((self.option.r - self.option.sigma**2 / 2) * self.dt +
-                                     self.option.sigma * np.sqrt(self.dt) * Z)
-        return S
-
-    def _generate_paths_antithetic(self, I):
-        """
-        Génère les trajectoires pour la méthode antithétique.
-        :param I: Nombre de simulations.
-        :return: Deux matrices des trajectoires simulées (Z et -Z).
-        """
-        S = np.zeros((self.M + 1, I))
-        P = np.zeros((self.M + 1, I))
-        S[0] = P[0] = self.option.S0
-        for t in range(1, self.M + 1):
-            Z = np.random.standard_normal(I)
-            S[t] = S[t - 1] * np.exp((self.option.r - self.option.sigma**2 / 2) * self.dt +
-                                     self.option.sigma * np.sqrt(self.dt) * Z)
-            P[t] = P[t - 1] * np.exp((self.option.r - self.option.sigma**2 / 2) * self.dt -
-                                     self.option.sigma * np.sqrt(self.dt) * Z)
-        return S, P
-
+    
     def _compute_results(self, hT, I):
         """
         Calcule le prix estimé, la variance et l'écart type des simulations.
@@ -117,3 +102,69 @@ class MonteCarloSimulator:
             "variance": price_variance,
             "std_dev": price_std
         }
+
+class MonteCarlo(Simulator):
+    def _generate_paths(self, I):
+        """
+        Génère les trajectoires pour le sous-jacent.
+        :param I: Nombre de simulations.
+        :return: Matrice des trajectoires simulées.
+        """
+        S = np.zeros((self.M + 1, I))
+        S[0] = self.option.S0
+        for t in range(1, self.M + 1):
+            Z = np.random.standard_normal(I)
+            S[t] = S[t - 1] * np.exp((self.option.r - self.option.sigma**2 / 2) * self.dt + self.option.sigma * np.sqrt(self.dt) * Z)
+        return S
+
+    def _generate_paths_antithetic(self, I):
+        """
+        Génère les trajectoires pour la méthode antithétique.
+        :param I: Nombre de simulations.
+        :return: Deux matrices des trajectoires simulées (Z et -Z).
+        """
+        S = np.zeros((self.M + 1, I))
+        P = np.zeros((self.M + 1, I))
+        S[0] = P[0] = self.option.S0
+        for t in range(1, self.M + 1):
+            Z = np.random.standard_normal(I)
+            S[t] = S[t - 1] * np.exp((self.option.r - self.option.sigma**2 / 2) * self.dt + self.option.sigma * np.sqrt(self.dt) * Z)
+            P[t] = P[t - 1] * np.exp((self.option.r - self.option.sigma**2 / 2) * self.dt - self.option.sigma * np.sqrt(self.dt) * Z)
+        return S, P
+    
+class RQMC(Simulator):
+    def _generate_paths(self, I):
+        """
+        Génère les trajectoires pour le sous-jacent.
+        :param I: Nombre de simulations.
+        :return: Matrice des trajectoires simulées.
+        """
+        sampler = qmc.Sobol(self.M, scramble=True)
+        quasi_uniform = sampler.random(I)
+        quasi_normal = norm.ppf(np.clip(quasi_uniform, 1e-10, 1 - 1e-10))
+
+        S = np.zeros((self.M + 1, I))
+        S[0] = self.option.S0
+        for t in range(1, self.M + 1):
+            Z = quasi_normal[:, t-1]
+            S[t] = S[t - 1] * np.exp((self.option.r - self.option.sigma**2 / 2) * self.dt + self.option.sigma * np.sqrt(self.dt) * Z)
+        return S
+
+    def _generate_paths_antithetic(self, I):
+        """
+        Génère les trajectoires pour la méthode antithétique.
+        :param I: Nombre de simulations.
+        :return: Deux matrices des trajectoires simulées (Z et -Z).
+        """
+        sampler = qmc.Sobol(self.M, scramble=True)
+        quasi_uniform = sampler.random(I)
+        quasi_normal = norm.ppf(np.clip(quasi_uniform, 1e-10, 1 - 1e-10))
+
+        S = np.zeros((self.M + 1, I))
+        P = np.zeros((self.M + 1, I))
+        S[0] = P[0] = self.option.S0
+        for t in range(1, self.M + 1):
+            Z = quasi_normal[:, t-1]
+            S[t] = S[t - 1] * np.exp((self.option.r - self.option.sigma**2 / 2) * self.dt + self.option.sigma * np.sqrt(self.dt) * Z)
+            P[t] = P[t - 1] * np.exp((self.option.r - self.option.sigma**2 / 2) * self.dt - self.option.sigma * np.sqrt(self.dt) * Z)
+        return S, P

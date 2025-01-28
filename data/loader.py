@@ -16,6 +16,7 @@ class DataLoader:
         df['log_returns'] = np.log(df['Close'] / df['Close'].shift(1))
         sigma = df.loc[(self.start_date - pd.DateOffset(years=1)):last_date_available, 'log_returns'].std() * np.sqrt(252)
         mu = df.loc[(self.start_date - pd.DateOffset(years=1)):last_date_available, 'log_returns'].mean() * 252
+        df.columns = df.columns.droplevel('Ticker')
         S0 = df.loc[df.index == last_date_available, 'Close'].iloc[-1]
         r = self.compute_risk_free_rate(self.start_date)
 
