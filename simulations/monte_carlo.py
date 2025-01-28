@@ -6,10 +6,10 @@ from .option import Option
 class Simulator(ABC):
     def __init__(self, option, M, dt):
         """
-        Classe mère abstraite pour les simulateurs.
-        :param option: Instance de la classe Option.
-        :param M: Nombre de pas temporels.
-        :param dt: Taille d'un pas temporel (T / M).
+        Abstract class for simulators
+        - option: object of the Option class.
+        - M: number of time steps.
+        - dt: size of time steps.
         """
         self.option = option
         self.M = M
@@ -18,22 +18,22 @@ class Simulator(ABC):
     @abstractmethod
     def _generate_paths(self, I):
         """
-        Méthode abstraite pour générer les trajectoires (à implémenter par les classes filles).
+        Abstract method for generating simulation paths. It is overdriven in each derived class.
         """
         pass
 
     @abstractmethod
     def _generate_paths_antithetic(self, I):
         """
-        Méthode abstraite pour générer les trajectoires antithetic (à implémenter par les classes filles).
+        Abstract method for generating simulation paths using antithetic variables. It is overdriven in each derived class.
         """
         pass
 
     def basic(self, I):
         """
-        Méthode de Monte Carlo basique pour estimer le prix de l'option.
-        :param I: Nombre de simulations.
-        :return: Dictionnaire avec le prix estimé, la variance et l'écart type.
+        Basic MC method.
+        - I: Number of simulations.
+        It returns a dictionary with the estimated price, the variance, and the standard deviation.
         """
         S = self._generate_paths(I)
         hT = self.option.payoff_call_asian(S)
@@ -41,9 +41,9 @@ class Simulator(ABC):
 
     def antithetic(self, I):
         """
-        Méthode Monte Carlo avec variables antithétiques pour améliorer la précision.
-        :param I: Nombre de simulations.
-        :return: Dictionnaire avec le prix estimé, la variance et l'écart type.
+        MC method with antithetic variables.
+        - I: Number of simulations.
+        It returns a dictionary with the estimated price, the variance, and the standard deviation.
         """
         S, P = self._generate_paths_antithetic(I)
         hT = (self.option.payoff_call_asian(S) + self.option.payoff_call_asian(P)) / 2
@@ -51,9 +51,11 @@ class Simulator(ABC):
 
     def control_variate_geom(self, I, return_control = False):
         """
-        Méthode Monte Carlo avec variates de contrôle géométriques.
-        :param I: Nombre de simulations.
-        :return: Dictionnaire avec le prix estimé, la variance et l'écart type.
+        MC method with geometric asian call option as control variate.
+        - I: Number of simulations.
+        It returns:
+        - (if return_control = False): a dictionary with the estimated price, the variance, and the standard deviation.
+        - (if return_control = True): the vector of payoffs adjusted using the control variate, and the control variate itself.
         """
         S = self._generate_paths(I)
         hT = self.option.payoff_call_asian(S)
@@ -68,10 +70,11 @@ class Simulator(ABC):
     
     def control_variate(self, I, return_control=False):
         """
-        Méthode Monte Carlo avec variates de contrôle arithmétiques.
-        :param I: Nombre de simulations.
-        :param return_control: Si True, retourne également les variates de contrôle.
-        :return: Résultats du pricing ou (payoffs, variates de contrôle) si return_control=True.
+        MC method with arithmetic average as control variate.
+        - I: Number of simulations.
+        It returns:
+        - (if return_control = False): a dictionary with the estimated price, the variance, and the standard deviation.
+        - (if return_control = True): the vector of payoffs adjusted using the control variate, and the control variate itself.
         """
         S = self._generate_paths(I)
         hT = self.option.payoff_call_asian(S)  # Calcul du payoff asiatique arithmétique
@@ -89,10 +92,10 @@ class Simulator(ABC):
     
     def _compute_results(self, hT, I):
         """
-        Calcule le prix estimé, la variance et l'écart type des simulations.
-        :param hT: Payoffs simulés.
-        :param I: Nombre de simulations.
-        :return: Dictionnaire avec le prix estimé, la variance et l'écart type.
+        Computes the estimated price, the variance, and the standard deviation of the simulations.
+        - hT: simulated payoffs.
+        - I: number of simulations.
+        It returns a dictionary with the estimated price, the variance, and the standard deviation.
         """
         price_estimate = np.exp(-self.option.r * self.option.T) * np.mean(hT)
         price_variance = np.exp(-2 * self.option.r * self.option.T) * np.var(hT) / I
@@ -106,9 +109,10 @@ class Simulator(ABC):
 class MonteCarlo(Simulator):
     def _generate_paths(self, I):
         """
-        Génère les trajectoires pour le sous-jacent.
-        :param I: Nombre de simulations.
-        :return: Matrice des trajectoires simulées.
+        Overdrives the function for object of the class MonteCarlo.
+        Generate paths of the underlying asset.
+        - I: Number of simulations.
+        It returns a matrix containing the simulated paths.
         """
         S = np.zeros((self.M + 1, I))
         S[0] = self.option.S0
@@ -119,9 +123,10 @@ class MonteCarlo(Simulator):
 
     def _generate_paths_antithetic(self, I):
         """
-        Génère les trajectoires pour la méthode antithétique.
-        :param I: Nombre de simulations.
-        :return: Deux matrices des trajectoires simulées (Z et -Z).
+        Overdrives the function for object of the class MonteCarlo.
+        Generate paths of the underlying asset for the antithetic variables method.
+        - I: Number of simulations.
+        It returns a matrix containing the simulated paths.
         """
         S = np.zeros((self.M + 1, I))
         P = np.zeros((self.M + 1, I))
@@ -135,9 +140,10 @@ class MonteCarlo(Simulator):
 class RQMC(Simulator):
     def _generate_paths(self, I):
         """
-        Génère les trajectoires pour le sous-jacent.
-        :param I: Nombre de simulations.
-        :return: Matrice des trajectoires simulées.
+        Overdrives the function for object of the class RQMC.
+        Generate paths of the underlying asset.
+        - I: Number of simulations.
+        It returns a matrix containing the simulated paths.
         """
         sampler = qmc.Sobol(self.M, scramble=True)
         quasi_uniform = sampler.random(I)
@@ -152,9 +158,10 @@ class RQMC(Simulator):
 
     def _generate_paths_antithetic(self, I):
         """
-        Génère les trajectoires pour la méthode antithétique.
-        :param I: Nombre de simulations.
-        :return: Deux matrices des trajectoires simulées (Z et -Z).
+        Overdrives the function for object of the class RQMC.
+        Generate paths of the underlying asset for the antithetic variables method.
+        - I: Number of simulations.
+        It returns a matrix containing the simulated paths.
         """
         sampler = qmc.Sobol(self.M, scramble=True)
         quasi_uniform = sampler.random(I)

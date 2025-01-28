@@ -2,21 +2,26 @@ import numpy as np
 import pandas as pd
 import time
 import matplotlib.pyplot as plt
+from ..simulations.monte_carlo import MonteCarlo
 
 
 class AnalysisTools:
     def __init__(self):
+        """
+        This class gathers all the functions used to make analyses on estimation methods, parameters, etc.
+        """
         pass
 
     def compare_I_values(self, pricing_method, M, dt, I_values):
         """
+        This method compares the price estimations, and the standard errors for various values of I.
         Compare les estimations de prix et l'écart type pour différentes valeurs de I.
-        :param pricing_method: Méthode de pricing à utiliser (fonction).
-        :param option: Instance de la classe Option.
-        :param M: Nombre de pas temporels.
-        :param dt: Taille d'un pas temporel.
-        :param I_values: Liste des nombres de simulations.
-        :return: DataFrame des résultats.
+        - pricing_method: pricing method used.
+        - option: object of the class Option on which the pricing method is applied.
+        - M: number of time steps.
+        - dt: size of time steps.
+        - I_values: values of I (number of simulations) to be compared.
+        It returns a pandas' dataframe containing three columns (I, Estimated Price, Standard Deviation).
         """
         results = []
 
@@ -33,22 +38,21 @@ class AnalysisTools:
 
     def compare_control_variates(self, option, M, dt, I_values, num_subsamples=10):
         """
-        Compare l'efficacité des variates de contrôle géométriques et arithmétiques.
-        :param option: Instance de la classe Option.
-        :param M: Nombre de pas temporels.
-        :param dt: Taille d'un pas temporel.
-        :param I_values: Liste des nombres de simulations.
-        :param num_subsamples: Nombre de sous-échantillons.
-        :return: DataFrame des résultats.
+        This methods compares the arithmetic average and the Geometric Asian Call option as control variates, on three different criteria.
+        - option: object of the class Option.
+        - M: number of time steps.
+        - dt: size of time steps.
+        - I_values: different values of I (number of simulations).
+        - num_subsamples: number of subsamples used to evaluate the robustness of beta values.
+        It returns a pandas' dataframe containing the results (correlation, Betas' standard deviation, computing time) and it plots the results.
         """
-        from simulations.monte_carlo import MonteCarloSimulator
 
         # Initialize results storage
         corrs_geom, corrs_avg = [], []
         std_betas_geom, std_betas_avg = [], []
         avg_times_geom, avg_times_avg = [], []
 
-        mc_simulator = MonteCarloSimulator(option, M, dt)
+        mc_simulator = MonteCarlo(option, M, dt)
 
         for I in I_values:
             sample_size = I // num_subsamples
@@ -106,10 +110,10 @@ class AnalysisTools:
 
     def compare_methods(self, methods, I_values):
         """
-        Compare plusieurs méthodes de pricing selon leur précision, temps de calcul et efficacité.
-        :param methods: Dictionnaire des méthodes à comparer.
-        :param I_values: Liste des nombres de simulations.
-        :return: DataFrame des résultats.
+        This method compares several pricing method based on their precision, computing time and efficiency.
+        - methods: dictionary containing the methods to be compared.
+        - I_values: different values of I (number of simulations).
+        It returns a pandas' dataframe containing the results (price, standard deviation, computing time, efficiency) and plots the results.
         """
         results = {method: {"Prices": [], "StdDev": [], "Times": [], "Efficiency": []} for method in methods}
 
@@ -135,7 +139,7 @@ class AnalysisTools:
 
     def _plot_control_variates(self, I_values, results_df):
         """
-        Génère des graphiques pour les variates de contrôle.
+        Generates plots to compare control variates.
         """
 
         fig, axes = plt.subplots(1, 3, figsize=(18, 6))
@@ -178,7 +182,7 @@ class AnalysisTools:
 
     def _plot_methods_comparison(self, I_values, results):
         """
-        Génère des graphiques pour comparer les méthodes.
+        Generates plots to compare pricing methods.
         """
         fig, axes = plt.subplots(2, 2, figsize=(12, 10), sharex=True)
 
@@ -227,5 +231,4 @@ class AnalysisTools:
         axes[1,1].legend(loc="best", fontsize=8, frameon=False)
 
         plt.tight_layout()
-        plt.savefig("graphique.pdf", format="pdf", bbox_inches="tight")
         plt.show()

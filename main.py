@@ -7,7 +7,7 @@ from simulations.monte_carlo import MonteCarlo, RQMC
 '''from simulations.quasi_monte_carlo import QuasiMonteCarloSimulator'''
 from analysis.tools import AnalysisTools
 
-# Initialisation des paramètres
+# Parameters initialisation
 ticker = 'BZ=F'
 start_date = '2023-10-02'
 start_date = pd.to_datetime(start_date)
@@ -17,7 +17,7 @@ M = 52
 dt = T / M
 I_values = [100, 1000, 5000, 10000, 50000, 100000, 250000, 750000]
 
-# Chargement des données
+# Loading data
 data_loader = DataLoader(ticker, start_date)
 df, S0, sigma, r, last_date_available = data_loader.load_data()
 print(f'Initial price: {S0}, Volatility: {sigma}, Risk-free rate: {r}')
@@ -25,7 +25,7 @@ print(f'Initial price: {S0}, Volatility: {sigma}, Risk-free rate: {r}')
 #Loading analysis tools
 analysis_tools = AnalysisTools()
 
-# Définition des simulateurs
+# Definition of simulators
 option = Option(S0, K, T, r, sigma)
 mc_simulator = MonteCarlo(option, M, dt)
 rqmc_simulator = RQMC(option, M, dt)
@@ -54,9 +54,8 @@ MC_methods = {
 
 RQMC_methods = {
         "RQMC Basic": rqmc_simulator.basic,
-        "Antithetic": rqmc_simulator.antithetic,
-        "Control Variate": rqmc_simulator.control_variate_geom,
+        "RQMCAntithetic": rqmc_simulator.antithetic,
+        "RQMCControl Variate": rqmc_simulator.control_variate_geom,
     }
 
-results_df = analysis_tools.compare_methods(RQMC_methods, I_values)
-print(results_df)
+print(df)
