@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from data.loader import DataLoader
 from simulations.option import Option
 from simulations.monte_carlo import MonteCarlo, RQMC
-'''from simulations.quasi_monte_carlo import QuasiMonteCarloSimulator'''
 from analysis.tools import AnalysisTools
 
 # Parameters initialisation
