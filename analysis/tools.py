@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import time
 import matplotlib.pyplot as plt
-from ..simulations.monte_carlo import MonteCarlo
+from simulations.monte_carlo import MonteCarlo
 
 
 class AnalysisTools:

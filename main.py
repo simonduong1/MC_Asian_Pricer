@@ -5,6 +5,7 @@ from data.loader import DataLoader
 from simulations.option import Option
 from simulations.monte_carlo import MonteCarlo, RQMC
 from analysis.tools import AnalysisTools
+from simulations.hedging import HedgingStrategy
 
 # Parameters initialisation
 ticker = 'BZ=F'
@@ -57,4 +58,7 @@ RQMC_methods = {
         "RQMCControl Variate": rqmc_simulator.control_variate_geom,
     }
 
-print(df)
+S_real_path = df.loc[start_date:(start_date + pd.DateOffset(years=1)), 'Close']
+
+hedger = HedgingStrategy(option, S_real_path)
+print(hedger._compute_xi())
