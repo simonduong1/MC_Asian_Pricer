@@ -26,7 +26,7 @@ class HedgingStrategy:
         
         return (S_integral / self.option.T - self.option.K) / self.S_paths
     
-    def _F(self, t):
+    def _F(self, t, I):
         S = np.zeros((self.M + 1, self.I))
         S[0] = self.option.S0
         for t in range(1, self.M + 1):
