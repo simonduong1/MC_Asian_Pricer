@@ -90,6 +90,13 @@ class Simulator(ABC):
         else:
             return self._compute_results(hT_controlled, I)  # Retourne les résultats standard
     
+    def compute_delta(self, S_path, I, t, epsilon=0.01):
+        time_values = (S_path.index - S_path.index[0]).days / 366 #2024 is a leap year
+        index = time_values.get_indexer([t], method="ffill")[0]
+        if time_values[index] == t:
+            index -= 1
+        S_historic = S_path[:index+1]
+
     def _compute_results(self, hT, I):
         """
         Computes the estimated price, the variance, and the standard deviation of the simulations.

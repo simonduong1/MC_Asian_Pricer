@@ -59,6 +59,11 @@ RQMC_methods = {
     }
 
 S_real_path = df.loc[start_date:(start_date + pd.DateOffset(years=1)), 'Close']
-
-hedger = HedgingStrategy(option, S_real_path)
-print(hedger._compute_xi())
+time_values = (S_real_path.index - S_real_path.index[0]).days / 366 #2024 is a leap year
+t = 2/12
+index = time_values.get_indexer([t], method="ffill")[0]
+if time_values[index] == t:
+    index -= 1
+S_historic = S_real_path[:index+1]
+print(index, time_values[index], time_values[index+1], S_real_path[index])
+print(S_historic)
