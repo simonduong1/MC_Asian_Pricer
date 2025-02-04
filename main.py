@@ -12,7 +12,7 @@ ticker = 'BZ=F'
 start_date = '2023-10-02'
 start_date = pd.to_datetime(start_date)
 T = 1.0
-K = 80
+K = 60
 M = 52
 dt = T / M
 I_values = [100, 1000, 5000, 10000, 50000, 100000, 250000, 750000]
@@ -59,11 +59,10 @@ RQMC_methods = {
     }
 
 S_real_path = df.loc[start_date:(start_date + pd.DateOffset(years=1)), 'Close']
-time_values = (S_real_path.index - S_real_path.index[0]).days / 366 #2024 is a leap year
-t = 2/12
-index = time_values.get_indexer([t], method="ffill")[0]
-if time_values[index] == t:
-    index -= 1
-S_historic = S_real_path[:index+1]
-print(index, time_values[index], time_values[index+1], S_real_path[index])
-print(S_historic)
+
+I = 100000
+N = 50
+
+cash, delta_positions, final_cash = analysis_tools.hedge_strategy(S_real_path, option, mc_simulator, I, N)
+
+print(cash, delta_positions, final_cash)

@@ -136,6 +136,40 @@ class AnalysisTools:
 
         self._plot_methods_comparison(I_values, results)
         return df
+    
+    def hedge_strategy(self, S_path, option, mc_simulator, I, N):
+        time_values = (S_path.index - S_path.index[0]).days / 366 
+        delta_prev = mc_simulator.compute_delta_estimator(S_path, I, 0)
+        initial_cash = mc_simulator.control_variate(I)["price"] - delta_prev * S_path[0]
+
+        cash = np.zeros(N+1)
+        cash[0] = initial_cash
+        delta_positions = np.zeros(N+1)
+        delta_positions[0] = delta_prev
+
+        for k in range(1,N+1):
+            t = time_values[k]
+            delta_t = mc_simulator.compute_delta_estimator(S_path, I, t)
+            delta_positions[k] = delta_t
+
+            trade = delta_t - delta_prev
+            cash_update = - trade * S_path[k]
+
+            cash[k] = cash_update + cash[k-1] * np.exp(option.r * (time_values[k] - time_values[k-1]))
+
+            delta_prev = delta_t
+
+        option_payoff = max((np.mean(S_path) - option.K), 0)
+        final_cash = cash[-2] + delta_positions[-2] * S_path[-1] - option_payoff
+
+        plt.figure()
+        plt.plot(delta_positions)
+        plt.show()
+        plt.figure()
+        plt.plot(cash)
+        plt.show()
+
+        return cash, delta_positions, final_cash
 
     def _plot_control_variates(self, I_values, results_df):
         """

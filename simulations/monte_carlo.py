@@ -93,9 +93,50 @@ class Simulator(ABC):
     def compute_delta(self, S_path, I, t, epsilon=0.01):
         time_values = (S_path.index - S_path.index[0]).days / 366 #2024 is a leap year
         index = time_values.get_indexer([t], method="ffill")[0]
-        if time_values[index] == t:
+        if index > 0 and time_values[index] == t:
             index -= 1
         S_historic = S_path[:index+1]
+
+        n_steps = (S_path.index[-1] - S_path.index[index]).days
+        step_size = 1/366
+        S_t = S_historic[-1]
+
+        option_temp_up = Option(S_t + epsilon, self.option.K, self.option.T-t, self.option.r, self.option.sigma)
+        option_temp_down = Option(S_t - epsilon, self.option.K, self.option.T-t, self.option.r, self.option.sigma)
+
+        mc_simulator_temp_up = MonteCarlo(option_temp_up, n_steps, step_size)
+        mc_simulator_temp_down = MonteCarlo(option_temp_down, n_steps, step_size)
+
+        V_up = mc_simulator_temp_up.basic(I)["price"]
+        V_down = mc_simulator_temp_down.basic(I)["price"]
+
+        print(V_up, V_down)
+
+        return (V_up - V_down) / (2 * epsilon)
+
+    def compute_delta_estimator(self, S_path, I, t):
+        time_values = (S_path.index - S_path.index[0]).days / 366 #2024 is a leap year
+        index = time_values.get_indexer([t], method="ffill")[0]
+        if index > 0 and time_values[index] == t:
+            index -= 1
+        S_historic = S_path[:index+1]
+
+        n_steps = (S_path.index[-1] - S_path.index[index]).days
+        step_size = 1/366
+        S_t = S_historic[-1]
+
+        option_temp = Option(S_t, self.option.K, self.option.T-t, self.option.r, self.option.sigma)
+        mc_simulator_temp = MonteCarlo(option_temp, n_steps, step_size)
+
+        simulated_paths = mc_simulator_temp._generate_paths(I)
+        simulated_rest = np.mean(np.sum(simulated_paths, axis=0))
+
+        completed_mean = (np.sum(S_historic) + simulated_rest) / (len(S_historic) + n_steps)
+
+        if completed_mean > self.option.K:
+            return np.exp(-self.option.r * (self.option.T - t)) * (completed_mean - self.option.K) / S_t
+        else:
+            return 0
 
     def _compute_results(self, hT, I):
         """
