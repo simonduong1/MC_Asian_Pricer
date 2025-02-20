@@ -4,7 +4,7 @@
 
 This repository contains the implementation of **Monte Carlo (MC) and randomized Quasi-Monte Carlo (RQMC) methods** for pricing **Asian options**, with an application to **Brent Crude**. The project focuses on **variance reduction techniques** such as **antithetic variables** and **control variates** to improve the efficiency and accuracy of option pricing.
 
-The approach is explained is the report **Pricing Asian Options.pdf**, which also compares and discusses results.
+The approach is explained in the report **Pricing Asian Options.pdf**, which also compares and discusses results.
 
 ### Key Features:
 - **Implementation of Monte Carlo (MC) and Quasi-Monte Carlo (RQMC) methods** for pricing Asian options.
@@ -37,6 +37,6 @@ Required libraries:
 - `matplotlib`
 - `pandas`
 
-## Authors
+## Author
 
-This project was developed by Simon Duong, student at ESCP and ENSAE.
+This project was developed by **Simon Duong**, student at **ESCP & ENSAE**.
