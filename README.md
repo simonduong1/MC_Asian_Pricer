@@ -17,18 +17,17 @@ The approach is explained is the report **Pricing Asian Options.pdf**, which als
 ---
 
 ## Project Structure
-
-📁 `MC_Asian_Pricer`  
-│── 📜 `main.py`                    _# Main script to run simulations_  
-│── 📁 `simulations`  
-    │── 📜 `monte_carlo.py`         _# MC and RQMC simulation methods_  
-    │── 📜 `option.py`              _# Class for defining options_  
-│── 📁 `data`  
-    │── 📜 `loader.py`              _# Data loading and preprocessing_  
-│── 📁 `analysis`  
-    │── 📜 `tools.py`               _# Utility functions (comparisons, etc.)_  
-│── 📄 `Pricing Asian Options.pdf`  _# Report containing theoretical foundations, results, and comparisons_  
-│── 📄 `README.md`
+ 
+📜 `main.py`                    _# Main script to run simulations_  
+📁 `simulations`  
+│── 📜 `monte_carlo.py`         _# MC and RQMC simulation methods_  
+│── 📜 `option.py`              _# Class for defining options_  
+📁 `data`  
+│── 📜 `loader.py`              _# Data loading and preprocessing_  
+📁 `analysis`  
+│── 📜 `tools.py`               _# Utility functions (comparisons, etc.)_  
+📄 `Pricing Asian Options.pdf`  _# Report containing theoretical foundations, results, and comparisons_  
+📄 `README.md`
 
 ## Prerequisites
 
