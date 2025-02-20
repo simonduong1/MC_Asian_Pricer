@@ -36,3 +36,7 @@ Required libraries:
 - `scipy`
 - `matplotlib`
 - `pandas`
+
+## Authors
+
+This project was developed by Simon Duong, student at ESCP and ENSAE.
